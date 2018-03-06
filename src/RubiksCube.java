@@ -54,6 +54,44 @@ public class RubiksCube {
         }
     }
 
+    public void cubeRotation(String direction) throws IllegalAccessException {
+        int[][] tempSide;
+        switch (direction){
+            case "clockwise":
+                tempSide = cube[0];
+                cube[0] = cube[3];
+                cube[3] = cube[1];
+                cube[1] = cube[2];
+                cube[2] = tempSide;
+                sideRotation(4,"clockwise");
+                sideRotation(5,"anticlockwise");
+                break;
+            case "anticlockwise":
+                tempSide = cube[0];
+                cube[0] = cube[2];
+                cube[2] = cube[1];
+                cube[1] = cube[3];
+                cube[3] = tempSide;
+                sideRotation(4,"anticlockwise");
+                sideRotation(5,"clockwise");
+                break;
+            case "invert":
+                tempSide = cube[4];
+                cube[4] = cube[5];
+                cube[5] = tempSide;
+                sideInversion(0);
+                sideInversion(1);
+                tempSide = cube[0];
+                cube[0] = cube[1];
+                cube[1] = tempSide;
+                sideInversion(2);
+                sideInversion(3);
+                break;
+            default:
+                throw new IllegalAccessException();
+        }
+    }
+
     // установление соответствия между строковыми параметрами и индексами сторон
     private static int getSideID (String side){
         HashMap<String, Integer> map = new HashMap<>();
