@@ -4,17 +4,20 @@ public class RubiksCube {
 
     // дефолтовый размер
     public RubiksCube(){
-        size = 3;
         setDefaultColors();
     }
 
     // кастомный размер
     public RubiksCube(int size){
-        this.size = size;
+        if (size >= 2)
+            this.size = size;
+        else
+            throw new IllegalArgumentException("size mustn't be less 2");
+        cube = new int[6][size][size];
         setDefaultColors();
     }
 
-    private int size;
+    private int size = 3;
     private int[][][] cube = new int[6][size][size];
 
     // возвращение куба в собранный вид
@@ -47,14 +50,21 @@ public class RubiksCube {
             for (int sideID = 0; sideID < 6; sideID++) {
                 for (int column = 0; column < size; column++)
                     System.out.print(cube[sideID][row][column]);
-                for (int count = 0; count < size+1; count++)
+                for (int count = 0; count < 4; count++)
                     System.out.print(" ");
             }
             System.out.println();
         }
     }
 
-    public void cubeRotation(String direction) throws IllegalAccessException {
+    /* вращение куба в пространстве:
+    *       - по/против час.стр.; меняют положение только боковые грани,
+    *           верхняя и нижняя грань просто вращаются в определенном направлении;
+    *       - перевернуть; основной акцент на смене положения верхней и нижней грани,
+    *           ведь "визуального доступа" до нижней грани не было до совершения этого действия;
+    *           впоследствии меняют положение передняя+задняя грани, вращаются левая+правая;
+    */
+    public void cubeRotation(String direction) throws IllegalArgumentException {
         int[][] tempSide;
         switch (direction){
             case "clockwise":
@@ -88,12 +98,219 @@ public class RubiksCube {
                 sideInversion(3);
                 break;
             default:
-                throw new IllegalAccessException();
+                throw new IllegalArgumentException("wrong direction");
+        }
+    }
+
+    /* вращение слоев:
+    *       - вращение грани взаимодействуя с другими гранями;
+    *       - из-за принятой индексации и главного постулата "давайте без заморочек" визуальное
+    *           вращение может не совпадать с формальным: например, вращая визуально против
+    *           часовой стрелки формально выполняется вращение грани по часовой стрелке;
+    *       итог: в параметрах указывается формальное направление по принятой индексации;
+    */
+    public void layerRotation(String side, String direction, int amount) throws IllegalArgumentException {
+
+        if (!(direction.equals("clockwise")) && !(direction.equals("anticlockwise")))
+            throw new IllegalArgumentException("wrong direction");
+        if ((amount < 1) || (amount >= size))
+            throw new IllegalArgumentException("1 <= amount < size");
+
+        int sideID = getSideID(side);
+        int extSize = size + 2 * amount;
+        int[][] extendedSide = new int[extSize][extSize];
+        int[] neighbours = nearSidesID(sideID);
+
+        switch (sideID){
+            case 0:
+                for (int row = amount - 1, i = size-1; row >= 0; row--, i--)
+                    for (int column = amount, j = 0; column < amount + size; column++, j++)
+                        extendedSide[row][column] = cube[neighbours[0]][i][j];
+                for (int column = amount + size, j = 0; column < extSize; column++, j++)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        extendedSide[row][column] = cube[neighbours[1]][i][j];
+                for (int row = amount + size, i = 0; row < extSize; row++, i++)
+                    for (int column = amount, j = 0; column < amount + size; column++, j++)
+                        extendedSide[row][column] = cube[neighbours[2]][i][j];
+                for (int column = amount - 1, j = size-1; column >= 0; column--, j--)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        extendedSide[row][column] = cube[neighbours[3]][i][j];
+                break;
+            case 1:
+                for (int row = amount - 1, i = 0; row >= 0; row--, i++)
+                    for (int column = amount, j = size-1; column < amount + size; column++, j--)
+                        extendedSide[row][column] = cube[neighbours[0]][i][j];
+                for (int column = amount + size, j = 0; column < extSize; column++, j++)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        extendedSide[row][column] = cube[neighbours[1]][i][j];
+                for (int row = amount + size, i = size-1; row < extSize; row++, i--)
+                    for (int column = amount, j = size-1; column < amount + size; column++, j--)
+                        extendedSide[row][column] = cube[neighbours[2]][i][j];
+                for (int column = amount - 1, j = size-1; column >= 0; column--, j--)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        extendedSide[row][column] = cube[neighbours[3]][i][j];
+                break;
+            case 2:
+                for (int row = amount - 1, j = 0; row >= 0; row--, j++)
+                    for (int column = amount, i = 0; column < amount + size; column++, i++)
+                        extendedSide[row][column] = cube[neighbours[0]][i][j];
+                for (int column = amount + size, j = 0; column < extSize; column++, j++)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        extendedSide[row][column] = cube[neighbours[1]][i][j];
+                for (int row = amount + size, j = 0; row < extSize; row++, j++)
+                    for (int column = amount, i = size-1; column < amount + size; column++, i--)
+                        extendedSide[row][column] = cube[neighbours[2]][i][j];
+                for (int column = amount - 1, j = size-1; column >= 0; column--, j--)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        extendedSide[row][column] = cube[neighbours[3]][i][j];
+                break;
+            case 3:
+                for (int row = amount - 1, j = size-1; row >= 0; row--, j--)
+                    for (int column = amount, i = size-1; column < amount + size; column++, i--)
+                        extendedSide[row][column] = cube[neighbours[0]][i][j];
+                for (int column = amount + size, j = 0; column < extSize; column++, j++)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        extendedSide[row][column] = cube[neighbours[1]][i][j];
+                for (int row = amount + size, j = size-1; row < extSize; row++, j--)
+                    for (int column = amount, i = 0; column < amount + size; column++, i++)
+                        extendedSide[row][column] = cube[neighbours[2]][i][j];
+                for (int column = amount - 1, j = size-1; column >= 0; column--, j--)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        extendedSide[row][column] = cube[neighbours[3]][i][j];
+                break;
+            case 4:
+                for (int row = amount - 1, i = 0; row >= 0; row--, i++)
+                    for (int column = amount, j = size-1; column < amount + size; column++, j--)
+                        extendedSide[row][column] = cube[neighbours[0]][i][j];
+                for (int column = amount + size, i = 0; column < extSize; column++, i++)
+                    for (int row = amount, j = size-1; row < amount + size; row++, j--)
+                        extendedSide[row][column] = cube[neighbours[1]][i][j];
+                for (int row = amount + size, i = 0; row < extSize; row++, i++)
+                    for (int column = amount, j = 0; column < amount + size; column++, j++)
+                        extendedSide[row][column] = cube[neighbours[2]][i][j];
+                for (int column = amount - 1, i = 0; column >= 0; column--, i++)
+                    for (int row = amount, j = 0; row < amount + size; row++, j++)
+                        extendedSide[row][column] = cube[neighbours[3]][i][j];
+                break;
+            case 5:
+                for (int row = amount - 1, i = size-1; row >= 0; row--, i--)
+                    for (int column = amount, j = 0; column < amount + size; column++, j++)
+                        extendedSide[row][column] = cube[neighbours[0]][i][j];
+                for (int column = amount + size, i = size-1; column < extSize; column++, i--)
+                    for (int row = amount, j = 0; row < amount + size; row++, j++)
+                        extendedSide[row][column] = cube[neighbours[1]][i][j];
+                for (int row = amount + size, i = size-1; row < extSize; row++, i--)
+                    for (int column = amount, j = size-1; column < amount + size; column++, j--)
+                        extendedSide[row][column] = cube[neighbours[2]][i][j];
+                for (int column = amount - 1, i = size-1; column >= 0; column--, i--)
+                    for (int row = amount, j = size-1; row < amount + size; row++, j--)
+                        extendedSide[row][column] = cube[neighbours[3]][i][j];
+                break;
+        }
+
+        switch (direction) {
+            case "clockwise":
+                for (int i = 0; i < extSize; i++)
+                    for (int j = 0; j < extSize; j++)
+                        extendedSide[j][(extSize - 1) - i] = extendedSide[i][j];
+                break;
+            case "anticlockwise":
+                for (int i = 0; i < extSize; i++)
+                    for (int j = 0; j < extSize; j++)
+                        extendedSide[(extSize - 1) - j][i] = extendedSide[i][j];
+                break;
+        }
+
+        switch (sideID){
+            case 0:
+                for (int row = amount - 1, i = size-1; row >= 0; row--, i--)
+                    for (int column = amount, j = 0; column < amount + size; column++, j++)
+                        cube[neighbours[0]][i][j] = extendedSide[row][column];
+                for (int column = amount + size, j = 0; column < extSize; column++, j++)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        cube[neighbours[1]][i][j] = extendedSide[row][column];
+                for (int row = amount + size, i = 0; row < extSize; row++, i++)
+                    for (int column = amount, j = 0; column < amount + size; column++, j++)
+                        cube[neighbours[2]][i][j] = extendedSide[row][column];
+                for (int column = amount - 1, j = size-1; column >= 0; column--, j--)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        cube[neighbours[3]][i][j] = extendedSide[row][column];
+                break;
+            case 1:
+                for (int row = amount - 1, i = 0; row >= 0; row--, i++)
+                    for (int column = amount, j = size-1; column < amount + size; column++, j--)
+                        cube[neighbours[0]][i][j] = extendedSide[row][column];
+                for (int column = amount + size, j = 0; column < extSize; column++, j++)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        cube[neighbours[1]][i][j] = extendedSide[row][column];
+                for (int row = amount + size, i = size-1; row < extSize; row++, i--)
+                    for (int column = amount, j = size-1; column < amount + size; column++, j--)
+                        cube[neighbours[2]][i][j] = extendedSide[row][column];
+                for (int column = amount - 1, j = size-1; column >= 0; column--, j--)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        cube[neighbours[3]][i][j] = extendedSide[row][column];
+                break;
+            case 2:
+                for (int row = amount - 1, j = 0; row >= 0; row--, j++)
+                    for (int column = amount, i = 0; column < amount + size; column++, i++)
+                        cube[neighbours[0]][i][j] = extendedSide[row][column];
+                for (int column = amount + size, j = 0; column < extSize; column++, j++)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        cube[neighbours[1]][i][j] = extendedSide[row][column];
+                for (int row = amount + size, j = 0; row < extSize; row++, j++)
+                    for (int column = amount, i = size-1; column < amount + size; column++, i--)
+                        cube[neighbours[2]][i][j] = extendedSide[row][column];
+                for (int column = amount - 1, j = size-1; column >= 0; column--, j--)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        cube[neighbours[3]][i][j] = extendedSide[row][column];
+                break;
+            case 3:
+                for (int row = amount - 1, j = size-1; row >= 0; row--, j--)
+                    for (int column = amount, i = size-1; column < amount + size; column++, i--)
+                        cube[neighbours[0]][i][j] = extendedSide[row][column];
+                for (int column = amount + size, j = 0; column < extSize; column++, j++)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        cube[neighbours[1]][i][j] = extendedSide[row][column];
+                for (int row = amount + size, j = size-1; row < extSize; row++, j--)
+                    for (int column = amount, i = 0; column < amount + size; column++, i++)
+                        cube[neighbours[2]][i][j] = extendedSide[row][column];
+                for (int column = amount - 1, j = size-1; column >= 0; column--, j--)
+                    for (int row = amount, i = 0; row < amount + size; row++, i++)
+                        cube[neighbours[3]][i][j] = extendedSide[row][column];
+                break;
+            case 4:
+                for (int row = amount - 1, i = 0; row >= 0; row--, i++)
+                    for (int column = amount, j = size-1; column < amount + size; column++, j--)
+                        cube[neighbours[0]][i][j] = extendedSide[row][column];
+                for (int column = amount + size, i = 0; column < extSize; column++, i++)
+                    for (int row = amount, j = size-1; row < amount + size; row++, j--)
+                        cube[neighbours[1]][i][j] = extendedSide[row][column];
+                for (int row = amount + size, i = 0; row < extSize; row++, i++)
+                    for (int column = amount, j = 0; column < amount + size; column++, j++)
+                        cube[neighbours[2]][i][j] = extendedSide[row][column];
+                for (int column = amount - 1, i = 0; column >= 0; column--, i++)
+                    for (int row = amount, j = 0; row < amount + size; row++, j++)
+                        cube[neighbours[3]][i][j] = extendedSide[row][column];
+                break;
+            case 5:
+                for (int row = amount - 1, i = size-1; row >= 0; row--, i--)
+                    for (int column = amount, j = 0; column < amount + size; column++, j++)
+                        cube[neighbours[0]][i][j] = extendedSide[row][column];
+                for (int column = amount + size, i = size-1; column < extSize; column++, i--)
+                    for (int row = amount, j = 0; row < amount + size; row++, j++)
+                        cube[neighbours[1]][i][j] = extendedSide[row][column];
+                for (int row = amount + size, i = size-1; row < extSize; row++, i--)
+                    for (int column = amount, j = size-1; column < amount + size; column++, j--)
+                        cube[neighbours[2]][i][j] = extendedSide[row][column];
+                for (int column = amount - 1, i = size-1; column >= 0; column--, i--)
+                    for (int row = amount, j = size-1; row < amount + size; row++, j--)
+                        cube[neighbours[3]][i][j] = extendedSide[row][column];
+                break;
         }
     }
 
     // установление соответствия между строковыми параметрами и индексами сторон
-    private static int getSideID (String side){
+    private static int getSideID (String side) throws IllegalArgumentException{
         HashMap<String, Integer> map = new HashMap<>();
         map.put("front", 0);    // white
         map.put("back", 1);     // yellow
@@ -101,14 +318,17 @@ public class RubiksCube {
         map.put("right", 3);    // red
         map.put("top", 4);      // blue
         map.put("bottom", 5);   // green
-        return map.get(side);
+        try { return map.get(side); }
+        catch (NullPointerException e){
+            throw new IllegalArgumentException("wrong name of side");
+        }
     }
 
     /* соседние стороны:
-    *       - индексы массива ~ индексы сторон
+    *       - индексы массива ~ индексы сторон;
     *       - элемент массива ~ ряд индексов сторон; формально: представим сторону
     *           как находящуюся прямо перед глазами, тогда ряд индексов является индексами
-    *           соседней верхней, правой, нижней и левой сторон
+    *           соседней верхней, правой, нижней и левой сторон;
     */
     private static int[] nearSidesID (int sideID) {
         int[][] nearSidesID = {{4,3,5,2}, {4,2,5,3},
@@ -117,8 +337,8 @@ public class RubiksCube {
     }
 
     /* вращение грани без взаимодействия с другими гранями:
-    *       - сторона якобы находится перед глазами
-    *       - неважно, каково вращение с постороннего взгляда
+    *       - сторона якобы находится перед глазами;
+    *       - неважно, каково вращение с постороннего взгляда;
     */
     private void sideRotation(int sideID, String direction){
         int[][] oldSide = cube[sideID];
