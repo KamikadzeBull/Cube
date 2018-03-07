@@ -55,6 +55,7 @@ public class RubiksCube {
             }
             System.out.println();
         }
+        System.out.println();
     }
 
     /* вращение куба в пространстве:
@@ -208,16 +209,22 @@ public class RubiksCube {
                 break;
         }
 
+        sideRotation(sideID, direction);
+
+        int [][] oldExtendedSide = new int[extSize][extSize];
+        for (int i=0; i < extSize; i++)
+            for (int j=0; j < extSize; j++)
+                oldExtendedSide[i][j] = extendedSide[i][j];
         switch (direction) {
             case "clockwise":
                 for (int i = 0; i < extSize; i++)
                     for (int j = 0; j < extSize; j++)
-                        extendedSide[j][(extSize - 1) - i] = extendedSide[i][j];
+                        extendedSide[i][j] = oldExtendedSide[extSize-1-j][i];
                 break;
             case "anticlockwise":
                 for (int i = 0; i < extSize; i++)
                     for (int j = 0; j < extSize; j++)
-                        extendedSide[(extSize - 1) - j][i] = extendedSide[i][j];
+                        extendedSide[i][j] = oldExtendedSide[j][extSize-1-i];
                 break;
         }
 
@@ -341,17 +348,20 @@ public class RubiksCube {
     *       - неважно, каково вращение с постороннего взгляда;
     */
     private void sideRotation(int sideID, String direction){
-        int[][] oldSide = cube[sideID];
+        int[][] oldSide = new int[size][size];
+        for (int i=0; i < size; i++)
+            for (int j=0; j < size; j++)
+                oldSide[i][j] = cube[sideID][i][j];
         switch (direction){
             case "clockwise":
                 for (int i = 0; i < size; i++)
                     for (int j = 0; j < size; j++)
-                        cube[sideID][j][(size - 1) - i] = oldSide[i][j];
+                        cube[sideID][i][j] = oldSide[size-1-j][i];
                 break;
             case "anticlockwise":
                 for (int i = 0; i < size; i++)
                     for (int j = 0; j < size; j++)
-                        cube[sideID][(size - 1) - j][i] = oldSide[i][j];
+                        cube[sideID][i][j] = oldSide[j][size-1-i];
                 break;
         }
     }
