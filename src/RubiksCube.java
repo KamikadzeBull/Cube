@@ -372,9 +372,35 @@ public class RubiksCube {
 
     // подобие двойного выполнения sideRotation() по одному направлению
     private void sideInversion(int sideID){
-        int[][] oldSide = cube[sideID];
         for (int i = 0; i < size; i++)
             for (int j = 0; j < size; j++)
-                cube[sideID][(size - 1) - i][(size - 1) - i] = oldSide[i][j];
+                cube[sideID][size-1-i][size-1-i] = cube[sideID][i][j];
+    }
+
+    public int[][][] getCube(){
+        return cube;
+    }
+
+    public void setCube(int[][][] cube){
+        this.cube = cube;
+    }
+
+    public static void description(){
+        System.out.println("цвета:");
+        System.out.println("\t0 - white, 1 - yellow, 2 - orange");
+        System.out.println("\t3 - red, 4 - blue, 5 - green");
+        System.out.println("номера цветов связаны с нумерацией сторон");
+        System.out.println("\t0 - front, 1 - back, 2 - left");
+        System.out.println("\t3 - right, 4 - top, 5 - bottom");
+        System.out.println("возможные направления вращения куба:");
+        System.out.println("\tclockwise, anticlockwise, invert");
+        System.out.println("возможные направления вращения слоев:");
+        System.out.println("\tclockwise, anticlockwise");
+        System.out.println("количество вращаемых слоев должно быть " +
+                "не меньше 1, но меньше размерности куба");
+        System.out.println("примеры вызова методов:");
+        System.out.println("\tRubiksCube rubiksCube = new RubiksCube(4)\t- создать куб 4х4");
+        System.out.println("\trubiksCube.sideRotation(\"left\",\"anticlockwise\",2)" +
+                "\t- повернуть два левосторонних слоя против ч.с.");
     }
 }
