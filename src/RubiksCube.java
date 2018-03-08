@@ -122,6 +122,7 @@ public class RubiksCube {
         int[][] extendedSide = new int[extSize][extSize];
         int[] neighbours = nearSidesID(sideID);
 
+        // выкладываем взаимодействующие элементы соседних граней в расширенную матрицу
         switch (sideID){
             case 0:
                 for (int row = amount - 1, i = size-1; row >= 0; row--, i--)
@@ -209,8 +210,10 @@ public class RubiksCube {
                 break;
         }
 
+        // вертим нужную грань без взаимодействия с другими гранями
         sideRotation(sideID, direction);
 
+        // вертим расширенную матрицу
         int [][] oldExtendedSide = new int[extSize][extSize];
         for (int i=0; i < extSize; i++)
             for (int j=0; j < extSize; j++)
@@ -228,6 +231,7 @@ public class RubiksCube {
                 break;
         }
 
+        // снимаем элементы с расширенной матрицы обратно на соседние грани
         switch (sideID){
             case 0:
                 for (int row = amount - 1, i = size-1; row >= 0; row--, i--)
