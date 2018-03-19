@@ -29,77 +29,205 @@ public class RubiksCube {
     }
 
     // отображение куба
-    public void show(){
-        System.out.print("front");
+    @Override
+    public String toString(){
+        StringBuilder s = new StringBuilder("");
+        s.append("front");
         for (int count = 0; count < size-1; count++)
-            System.out.print(" ");
-        System.out.print("back");
+            s.append(" ");
+        s.append("back");
         for (int count = 0; count < size; count++)
-            System.out.print(" ");
-        System.out.print("left");
+            s.append(" ");
+        s.append("left");
         for (int count = 0; count < size; count++)
-            System.out.print(" ");
-        System.out.print("right");
+            s.append(" ");
+        s.append("right");
         for (int count = 0; count < size-1; count++)
-            System.out.print(" ");
-        System.out.print("top");
+            s.append(" ");
+        s.append("top");
         for (int count = 0; count < size+1; count++)
-            System.out.print(" ");
-        System.out.println("button");
+            s.append(" ");
+        s.append("button\n");
         for (int row = 0; row < size; row++) {
             for (int sideID = 0; sideID < 6; sideID++) {
                 for (int column = 0; column < size; column++)
-                    System.out.print(cube[sideID][row][column]);
+                    s.append(cube[sideID][row][column]);
                 for (int count = 0; count < 4; count++)
-                    System.out.print(" ");
+                    s.append(" ");
             }
-            System.out.println();
+            s.append("\n");
         }
-        System.out.println();
+        return s.toString();
     }
 
+    // проверяет на равенство кубы: в случае параметра в виде массива
+    public boolean equals (int[][][] otherCube){
+        int [][][] thisCube = this.getCube();
+        boolean flag = true;
+        try{
+            for (int i = 0; i < 6; i++)
+                for (int j = 0; j < size; j++)
+                    for (int k = 0; k < size; k++)
+                        if (thisCube[i][j][k] != otherCube[i][j][k])
+                            throw new Exception();
+        }
+        catch (Exception e){
+            flag = false;
+        }
+        return flag;
+    }
+
+    // ... в случае параметра в виде объекта класса RubiksCube
+    public boolean equals (RubiksCube otherCube){
+        int [][][] thisCube = this.getCube();
+        int [][][] anotherCube = otherCube.getCube();
+        boolean flag = true;
+        try{
+            for (int i = 0; i < 6; i++)
+                for (int j = 0; j < size; j++)
+                    for (int k = 0; k < size; k++)
+                        if (thisCube[i][j][k] != anotherCube[i][j][k])
+                            throw new Exception();
+        }
+        catch (Exception e){
+            flag = false;
+        }
+        return flag;
+    }
+
+    // делает 50 поворотов рандомного количества слоев рандомных сторон за вас
+    public void setRandomColors(){
+        Random move = new Random();
+        Random amount = new Random();
+        List<Integer> randomMoves = new ArrayList<>();
+        List<Integer> randomAmount = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            randomMoves.add(move.nextInt(12));
+            randomAmount.add(amount.nextInt(size-1) + 1);
+        }
+        for (int i = 0; i < 50; i++)
+            switch (randomMoves.get(i)){
+                case 0:
+                    this.layerRotation(Side.FRONT, Direction.CLOCKWISE, randomAmount.get(i));
+                    break;
+                case 1:
+                    this.layerRotation(Side.FRONT, Direction.ANTICLOCKWISE, randomAmount.get(i));
+                    break;
+                case 2:
+                    this.layerRotation(Side.BACK, Direction.CLOCKWISE, randomAmount.get(i));
+                    break;
+                case 3:
+                    this.layerRotation(Side.BACK, Direction.ANTICLOCKWISE, randomAmount.get(i));
+                    break;
+                case 4:
+                    this.layerRotation(Side.LEFT, Direction.CLOCKWISE, randomAmount.get(i));
+                    break;
+                case 5:
+                    this.layerRotation(Side.LEFT, Direction.ANTICLOCKWISE, randomAmount.get(i));
+                    break;
+                case 6:
+                    this.layerRotation(Side.RIGHT, Direction.CLOCKWISE, randomAmount.get(i));
+                    break;
+                case 7:
+                    this.layerRotation(Side.RIGHT, Direction.ANTICLOCKWISE, randomAmount.get(i));
+                    break;
+                case 8:
+                    this.layerRotation(Side.TOP, Direction.CLOCKWISE, randomAmount.get(i));
+                    break;
+                case 9:
+                    this.layerRotation(Side.TOP, Direction.ANTICLOCKWISE, randomAmount.get(i));
+                    break;
+                case 10:
+                    this.layerRotation(Side.BOTTOM, Direction.CLOCKWISE, randomAmount.get(i));
+                    break;
+                case 11:
+                    this.layerRotation(Side.BOTTOM, Direction.ANTICLOCKWISE, randomAmount.get(i));
+                    break;
+            }
+    }
+
+
     /* вращение куба в пространстве:
-    *       - по/против час.стр.; меняют положение только боковые грани,
-    *           верхняя и нижняя грань просто вращаются в определенном направлении;
-    *       - перевернуть; основной акцент на смене положения верхней и нижней грани,
-    *           ведь "визуального доступа" до нижней грани не было до совершения этого действия;
-    *           впоследствии меняют положение передняя+задняя грани, вращаются левая+правая;
+    *       - три оси: VERTICAL (напр. от верхней стороны), HORIZONTAL (от левой), STRAIGHT (от фронтальной);
+    *       - два направления вращения: CLOCKWISE, ANTICLOCKWISE;
     */
-    public void cubeRotation(String direction) throws IllegalArgumentException {
+    public void cubeRotation(Axis axis, Direction direction) throws IllegalArgumentException {
         int[][] tempSide;
         switch (direction){
-            case "clockwise":
-                tempSide = cube[0];
-                cube[0] = cube[3];
-                cube[3] = cube[1];
-                cube[1] = cube[2];
-                cube[2] = tempSide;
-                sideRotation(4,"clockwise");
-                sideRotation(5,"anticlockwise");
+            case CLOCKWISE:
+                switch (axis){
+                    case VERTICAL:
+                        tempSide = cube[0];
+                        cube[0] = cube[3];
+                        cube[3] = cube[1];
+                        cube[1] = cube[2];
+                        cube[2] = tempSide;
+                        sideRotation(Side.TOP, Direction.CLOCKWISE);
+                        sideRotation(Side.BOTTOM, Direction.ANTICLOCKWISE);
+                        break;
+                    case HORIZONTAL:
+                        tempSide = cube[0];
+                        cube[0] = cube[4];
+                        cube[4] = cube[1];
+                        sideInversion(Side.TOP);
+                        cube[1] = cube[5];
+                        sideInversion(Side.BACK);
+                        cube[5] = tempSide;
+                        sideRotation(Side.LEFT, Direction.CLOCKWISE);
+                        sideRotation(Side.RIGHT, Direction.ANTICLOCKWISE);
+                        break;
+                    case STRAIGHT:
+                        tempSide = cube[4];
+                        cube[4] = cube[2];
+                        sideRotation(Side.TOP, Direction.CLOCKWISE);
+                        cube[2] = cube[5];
+                        sideRotation(Side.LEFT, Direction.CLOCKWISE);
+                        cube[5] = cube[3];
+                        sideRotation(Side.BOTTOM, Direction.CLOCKWISE);
+                        cube[3] = tempSide;
+                        sideRotation(Side.RIGHT, Direction.CLOCKWISE);
+                        sideRotation(Side.FRONT, Direction.CLOCKWISE);
+                        sideRotation(Side.BACK, Direction.ANTICLOCKWISE);
+                        break;
+                }
                 break;
-            case "anticlockwise":
-                tempSide = cube[0];
-                cube[0] = cube[2];
-                cube[2] = cube[1];
-                cube[1] = cube[3];
-                cube[3] = tempSide;
-                sideRotation(4,"anticlockwise");
-                sideRotation(5,"clockwise");
+            case ANTICLOCKWISE:
+                switch (axis){
+                    case VERTICAL:
+                        tempSide = cube[0];
+                        cube[0] = cube[2];
+                        cube[2] = cube[1];
+                        cube[1] = cube[3];
+                        cube[3] = tempSide;
+                        sideRotation(Side.TOP, Direction.ANTICLOCKWISE);
+                        sideRotation(Side.BOTTOM,Direction.CLOCKWISE);
+                        break;
+                    case HORIZONTAL:
+                        tempSide = cube[0];
+                        cube[0] = cube[5];
+                        cube[5] = cube[1];
+                        sideInversion(Side.BOTTOM);
+                        cube[1] = cube[4];
+                        sideInversion(Side.BACK);
+                        cube[4] = tempSide;
+                        sideRotation(Side.LEFT, Direction.ANTICLOCKWISE);
+                        sideRotation(Side.RIGHT, Direction.CLOCKWISE);
+                        break;
+                    case STRAIGHT:
+                        tempSide = cube[4];
+                        cube[4] = cube[3];
+                        sideRotation(Side.TOP, Direction.ANTICLOCKWISE);
+                        cube[3] = cube[5];
+                        sideRotation(Side.RIGHT, Direction.ANTICLOCKWISE);
+                        cube[5] = cube[2];
+                        sideRotation(Side.BOTTOM, Direction.ANTICLOCKWISE);
+                        cube[2] = tempSide;
+                        sideRotation(Side.LEFT, Direction.ANTICLOCKWISE);
+                        sideRotation(Side.FRONT, Direction.ANTICLOCKWISE);
+                        sideRotation(Side.BACK, Direction.CLOCKWISE);
+                        break;
+                }
                 break;
-            case "invert":
-                tempSide = cube[4];
-                cube[4] = cube[5];
-                cube[5] = tempSide;
-                sideInversion(0);
-                sideInversion(1);
-                tempSide = cube[0];
-                cube[0] = cube[1];
-                cube[1] = tempSide;
-                sideInversion(2);
-                sideInversion(3);
-                break;
-            default:
-                throw new IllegalArgumentException("wrong direction");
         }
     }
 
@@ -110,17 +238,15 @@ public class RubiksCube {
     *           часовой стрелки формально выполняется вращение грани по часовой стрелке;
     *       итог: в параметрах указывается формальное направление по принятой индексации;
     */
-    public void layerRotation(String side, String direction, int amount) throws IllegalArgumentException {
+    public void layerRotation(Side side, Direction direction, int amount) throws IllegalArgumentException {
 
-        if (!(direction.equals("clockwise")) && !(direction.equals("anticlockwise")))
-            throw new IllegalArgumentException("wrong direction");
         if ((amount < 1) || (amount >= size))
             throw new IllegalArgumentException("1 <= amount < size");
 
-        int sideID = getSideID(side);
+        int sideID = side.ID;
         int extSize = size + 2 * amount;
         int[][] extendedSide = new int[extSize][extSize];
-        int[] neighbours = nearSidesID(sideID);
+        int[] neighbours = nearSidesID[sideID];
 
         // выкладываем взаимодействующие элементы соседних граней в расширенную матрицу
         switch (sideID){
@@ -211,7 +337,7 @@ public class RubiksCube {
         }
 
         // вертим нужную грань без взаимодействия с другими гранями
-        sideRotation(sideID, direction);
+        sideRotation(side, direction);
 
         // вертим расширенную матрицу
         int [][] oldExtendedSide = new int[extSize][extSize];
@@ -219,12 +345,12 @@ public class RubiksCube {
             for (int j=0; j < extSize; j++)
                 oldExtendedSide[i][j] = extendedSide[i][j];
         switch (direction) {
-            case "clockwise":
+            case CLOCKWISE:
                 for (int i = 0; i < extSize; i++)
                     for (int j = 0; j < extSize; j++)
                         extendedSide[i][j] = oldExtendedSide[extSize-1-j][i];
                 break;
-            case "anticlockwise":
+            case ANTICLOCKWISE:
                 for (int i = 0; i < extSize; i++)
                     for (int j = 0; j < extSize; j++)
                         extendedSide[i][j] = oldExtendedSide[j][extSize-1-i];
@@ -320,49 +446,49 @@ public class RubiksCube {
         }
     }
 
-    // установление соответствия между строковыми параметрами и индексами сторон
-    private static int getSideID (String side) throws IllegalArgumentException{
-        HashMap<String, Integer> map = new HashMap<>();
-        map.put("front", 0);    // white
-        map.put("back", 1);     // yellow
-        map.put("left", 2);     // orange
-        map.put("right", 3);    // red
-        map.put("top", 4);      // blue
-        map.put("bottom", 5);   // green
-        try { return map.get(side); }
-        catch (NullPointerException e){
-            throw new IllegalArgumentException("wrong name of side");
-        }
-    }
-
     /* соседние стороны:
     *       - индексы массива ~ индексы сторон;
     *       - элемент массива ~ ряд индексов сторон; формально: представим сторону
     *           как находящуюся прямо перед глазами, тогда ряд индексов является индексами
     *           соседней верхней, правой, нижней и левой сторон;
     */
-    private static int[] nearSidesID (int sideID) {
-        int[][] nearSidesID = {{4,3,5,2}, {4,2,5,3},
-                {4,0,5,1}, {4,1,5,0}, {1,3,0,2}, {1,2,0,3}};
-        return nearSidesID[sideID];
+
+    private static int[][] nearSidesID = {{4,3,5,2}, {4,2,5,3},
+            {4,0,5,1}, {4,1,5,0}, {1,3,0,2}, {1,2,0,3}};
+
+    enum Side{
+        FRONT(0), BACK(1), LEFT(2), RIGHT(3), TOP(4), BOTTOM(5);
+        private int ID;
+        Side(int ID){
+            this.ID = ID;
+        }
+    }
+
+    enum Direction{
+        CLOCKWISE, ANTICLOCKWISE
+    }
+
+    enum Axis{
+        VERTICAL, HORIZONTAL, STRAIGHT
     }
 
     /* вращение грани без взаимодействия с другими гранями:
     *       - сторона якобы находится перед глазами;
     *       - неважно, каково вращение с постороннего взгляда;
     */
-    private void sideRotation(int sideID, String direction){
+    private void sideRotation(Side side, Direction direction){
+        int sideID = side.ID;
         int[][] oldSide = new int[size][size];
         for (int i=0; i < size; i++)
             for (int j=0; j < size; j++)
                 oldSide[i][j] = cube[sideID][i][j];
         switch (direction){
-            case "clockwise":
+            case CLOCKWISE:
                 for (int i = 0; i < size; i++)
                     for (int j = 0; j < size; j++)
                         cube[sideID][i][j] = oldSide[size-1-j][i];
                 break;
-            case "anticlockwise":
+            case ANTICLOCKWISE:
                 for (int i = 0; i < size; i++)
                     for (int j = 0; j < size; j++)
                         cube[sideID][i][j] = oldSide[j][size-1-i];
@@ -370,19 +496,15 @@ public class RubiksCube {
         }
     }
 
-    // подобие двойного выполнения sideRotation() по одному направлению
-    private void sideInversion(int sideID){
+    private void sideInversion(Side side){
+        int sideID = side.ID;
         for (int i = 0; i < size; i++)
             for (int j = 0; j < size; j++)
                 cube[sideID][size-1-i][size-1-i] = cube[sideID][i][j];
     }
 
     public int[][][] getCube(){
-        return cube;
-    }
-
-    public void setCube(int[][][] cube){
-        this.cube = cube;
+        return cube.clone();
     }
 
     public static void description(){
@@ -390,17 +512,13 @@ public class RubiksCube {
         System.out.println("\t0 - white, 1 - yellow, 2 - orange");
         System.out.println("\t3 - red, 4 - blue, 5 - green");
         System.out.println("номера цветов связаны с нумерацией сторон");
-        System.out.println("\t0 - front, 1 - back, 2 - left");
-        System.out.println("\t3 - right, 4 - top, 5 - bottom");
-        System.out.println("возможные направления вращения куба:");
-        System.out.println("\tclockwise, anticlockwise, invert");
-        System.out.println("возможные направления вращения слоев:");
-        System.out.println("\tclockwise, anticlockwise");
+        System.out.println("\tFRONT(0), BACK(1), LEFT(2)");
+        System.out.println("\tRIGHT(3), TOP(4), BOTTOM(5)");
+        System.out.println("оси вращения куба в пространстве:");
+        System.out.println("\tVERTICAL, HORIZONTAL, STRAIGHT");
+        System.out.println("возможные направления вращения:");
+        System.out.println("\tCLOCKWISE, ANTICLOCKWISE");
         System.out.println("количество вращаемых слоев должно быть " +
                 "не меньше 1, но меньше размерности куба");
-        System.out.println("примеры вызова методов:");
-        System.out.println("\tRubiksCube rubiksCube = new RubiksCube(4)\t- создать куб 4х4");
-        System.out.println("\trubiksCube.sideRotation(\"left\",\"anticlockwise\",2)" +
-                "\t- повернуть два левосторонних слоя против ч.с.");
     }
 }
