@@ -30,25 +30,18 @@ class RubiksCubeTest {
                                {{5,5,5},{5,5,5},{5,5,5}},
                                {{4,4,4},{4,4,4},{4,4,4}}};
 
-        rubiksCube.cubeRotation("clockwise");
-        assertArrayEquals(trueCube1, rubiksCube.getCube());
+        rubiksCube.cubeRotation(RubiksCube.Axis.VERTICAL, RubiksCube.Direction.CLOCKWISE);
+        assertTrue(rubiksCube.equals(trueCube1));
         rubiksCube.setDefaultColors();
 
-        rubiksCube.cubeRotation("anticlockwise");
-        assertArrayEquals(trueCube2, rubiksCube.getCube());
+        rubiksCube.cubeRotation(RubiksCube.Axis.VERTICAL, RubiksCube.Direction.ANTICLOCKWISE);
+        assertTrue(rubiksCube.equals(trueCube2));
         rubiksCube.setDefaultColors();
 
-        rubiksCube.cubeRotation("invert");
-        assertArrayEquals(trueCube3, rubiksCube.getCube());
+        rubiksCube.cubeRotation(RubiksCube.Axis.HORIZONTAL, RubiksCube.Direction.CLOCKWISE);
+        rubiksCube.cubeRotation(RubiksCube.Axis.HORIZONTAL, RubiksCube.Direction.CLOCKWISE);
+        assertTrue(rubiksCube.equals(trueCube3));
         rubiksCube.setDefaultColors();
-
-        try{
-            rubiksCube.cubeRotation("otherString");
-            fail("expected IllegalArgumentException");
-        }
-        catch (IllegalArgumentException exception){
-            assertEquals("wrong direction", exception.getMessage());
-        }
     }
 
     @Test
@@ -62,70 +55,49 @@ class RubiksCubeTest {
                                {{3,2,2},{4,3,5},{5,1,5}}};
 
         // рандомный порядок действий
-        rubiksCube.layerRotation("front","clockwise",1);
-        rubiksCube.layerRotation("right","anticlockwise",1);
-        rubiksCube.layerRotation("back","clockwise",1);
-        rubiksCube.layerRotation("left","anticlockwise",1);
-        rubiksCube.layerRotation("top","clockwise",1);
-        rubiksCube.layerRotation("bottom","anticlockwise",1);
-        rubiksCube.layerRotation("front","clockwise",2);
-        rubiksCube.layerRotation("right","anticlockwise",2);
-        rubiksCube.layerRotation("back","clockwise",2);
-        rubiksCube.layerRotation("left","anticlockwise",2);
-        rubiksCube.layerRotation("top","clockwise",2);
-        rubiksCube.layerRotation("bottom","anticlockwise",2);
-        assertArrayEquals(trueCube1, rubiksCube.getCube());
+        rubiksCube.layerRotation(RubiksCube.Side.FRONT, RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.RIGHT, RubiksCube.Direction.ANTICLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.BACK, RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.LEFT,RubiksCube.Direction.ANTICLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.TOP,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.BOTTOM,RubiksCube.Direction.ANTICLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.FRONT,RubiksCube.Direction.CLOCKWISE,2);
+        rubiksCube.layerRotation(RubiksCube.Side.RIGHT,RubiksCube.Direction.ANTICLOCKWISE,2);
+        rubiksCube.layerRotation(RubiksCube.Side.BACK,RubiksCube.Direction.CLOCKWISE,2);
+        rubiksCube.layerRotation(RubiksCube.Side.LEFT,RubiksCube.Direction.ANTICLOCKWISE,2);
+        rubiksCube.layerRotation(RubiksCube.Side.TOP,RubiksCube.Direction.CLOCKWISE,2);
+        rubiksCube.layerRotation(RubiksCube.Side.BOTTOM,RubiksCube.Direction.ANTICLOCKWISE,2);
+        assertTrue(rubiksCube.equals(trueCube1));
 
         // то, что навертели прошлыми действиями, здесь собирается в дефолтовый куб по одному слою
-        rubiksCube.layerRotation("front","clockwise",1);
-        rubiksCube.layerRotation("top","clockwise",1);
-        rubiksCube.layerRotation("top","clockwise",1);
-        rubiksCube.layerRotation("bottom","clockwise",1);
-        rubiksCube.layerRotation("front","clockwise",1);
-        rubiksCube.layerRotation("bottom","anticlockwise",1);
-        rubiksCube.layerRotation("right","clockwise",1);
-        rubiksCube.layerRotation("top","anticlockwise",1);
-        rubiksCube.layerRotation("back","clockwise",1);
-        rubiksCube.layerRotation("back","clockwise",1);
-        rubiksCube.layerRotation("left","anticlockwise",1);
-        rubiksCube.layerRotation("front","clockwise",1);
-        rubiksCube.layerRotation("back","clockwise",1);
-        rubiksCube.layerRotation("bottom","clockwise",1);
-        rubiksCube.layerRotation("front","clockwise",1);
-        rubiksCube.layerRotation("front","clockwise",1);
-        rubiksCube.layerRotation("left","clockwise",1);
-        rubiksCube.layerRotation("left","clockwise",1);
-        rubiksCube.layerRotation("front","clockwise",1);
-        rubiksCube.layerRotation("front","clockwise",1);
-        rubiksCube.layerRotation("bottom","clockwise",1);
-        rubiksCube.layerRotation("right","clockwise",1);
-        rubiksCube.layerRotation("right","clockwise",1);
-        rubiksCube.layerRotation("top","anticlockwise",1);
-        rubiksCube.layerRotation("front","clockwise",1);
-        rubiksCube.layerRotation("front","clockwise",1);
-        rubiksCube.layerRotation("right","clockwise",1);
-        rubiksCube.layerRotation("right","clockwise",1);
-        assertArrayEquals(defaultCube, rubiksCube.getCube());
-
-        try{
-            rubiksCube.layerRotation("otherString","clockwise",2);
-            fail("expected IllegalArgumentException");
-        } catch (IllegalArgumentException exception){
-            assertEquals("wrong name of side", exception.getMessage());
-        }
-
-        try{
-            rubiksCube.layerRotation("left","otherString",2);
-            fail("expected IllegalArgumentException");
-        } catch (IllegalArgumentException exception){
-            assertEquals("wrong direction", exception.getMessage());
-        }
-
-        try{
-            rubiksCube.layerRotation("left","clockwise",0);
-            fail("expected IllegalArgumentException");
-        } catch (IllegalArgumentException exception){
-            assertEquals("1 <= amount < size", exception.getMessage());
-        }
+        rubiksCube.layerRotation(RubiksCube.Side.FRONT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.TOP,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.TOP,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.BOTTOM,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.FRONT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.BOTTOM,RubiksCube.Direction.ANTICLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.RIGHT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.TOP,RubiksCube.Direction.ANTICLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.BACK,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.BACK,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.LEFT,RubiksCube.Direction.ANTICLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.FRONT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.BACK,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.BOTTOM,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.FRONT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.FRONT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.LEFT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.LEFT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.FRONT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.FRONT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.BOTTOM,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.RIGHT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.RIGHT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.TOP,RubiksCube.Direction.ANTICLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.FRONT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.FRONT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.RIGHT,RubiksCube.Direction.CLOCKWISE,1);
+        rubiksCube.layerRotation(RubiksCube.Side.RIGHT,RubiksCube.Direction.CLOCKWISE,1);
+        assertTrue(rubiksCube.equals(defaultCube));
     }
 }
